@@ -11,38 +11,42 @@ export class DataService {
         @InjectModel('row') private readonly rowModel: Model<RowDocument>,
     ) {}
 
-    public async handleFile(file: File): Promise<any> {
-        const fileContent = await this.parseCSV(file);
-
-        return fileContent;
-    }
-
-    private async parseCSV(file: File) {
-        const results = [];
-        const files = fs.readdirSync('./files');
-        console.log(files);
-        fs.createReadStream(`./files/${files[0]}`)
-        .pipe(csv())
-        .on('data', async (data) => {
-            const series = {};
-            for ( const keys in data) {
-                if (!isNaN(parseInt(keys))) series[keys] = data[keys];
-            }
-            this.saveRow({
-                country: data.Country,
-                sector: data.Sector,
-                parentSector: data['Parent sector'],
-                series
-            })            
-        })
-        .on('end', () => console.log('parsing ended'))
-        
-        return results;
+    public async handleFile(): Promise<void> {
+        try {
+            const files = fs.readdirSync('./files');
+            fs.createReadStream(`./files/${files[0]}`)
+            .pipe(csv())
+            .on('data', async (data) => {
+                const series = {};
+                for ( const keys in data) {
+                    if (!isNaN(parseInt(keys))) series[keys] = data[keys];
+                }
+                this.saveRow({
+                    country: data.Country,
+                    sector: data.Sector,
+                    parentSector: data['Parent sector'],
+                    series
+                })            
+            })
+            .on('end', () => console.log('parsing ended'))
+            .on('finish', () => {
+                fs.rmdirSync('./files', { recursive: true });
+                console.log(`temporary file has been deleted!`);
+            }) 
+            
+            return;
+        } catch (err) {
+            throw err;
+        }        
     }
 
     private async saveRow(rowDto: CreateRowDto): Promise<Row> {
-        const row = await this.rowModel.create(rowDto);
+        try {
+            const row = await this.rowModel.create(rowDto);
         
-        return row.save();
+            return row.save();
+        } catch (err) {
+            throw err;
+        }        
     } 
 }

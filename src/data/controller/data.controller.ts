@@ -14,9 +14,10 @@ export class DataController {
         preservePath: true
     }))
     async postFile(
-        @UploadedFile() file: any
-    ): Promise<void> {
-       const fileContent = await this.dataService.handleFile(file);
-       return fileContent;
+        @UploadedFile() file: Express.Multer.File
+    ): Promise<string> {
+        await this.dataService.handleFile();
+
+        return `The data from ${file.originalname} is being copied into the database. \n You will be able to check all the information momentarily.`;
     }
 }
