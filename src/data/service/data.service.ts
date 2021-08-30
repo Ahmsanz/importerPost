@@ -26,7 +26,7 @@ export class DataService {
                     sector: data.Sector,
                     parentSector: data['Parent sector'],
                     series
-                })            
+                });
             })
             .on('end', () => console.log('parsing ended'))
             .on('finish', () => {
